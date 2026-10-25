@@ -1,3 +1,5 @@
 art/out/
 .godot/
 *.import.tmp
+__pycache__/
+*.pyc
