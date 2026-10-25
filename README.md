@@ -39,7 +39,6 @@ scripts/battle/       BattleManager, BattleActorView
 shaders/              battle_transition, palette_crt, hit_flash
 tests/                test_runner (headless checks), capture (screenshots)
 docs/ARCHITECTURE.md  node tree, system specs, shader guide
-.claude/skills/       Agent Sprite Forge skills (see docs/SPRITE_FORGE.md)
 ```
 
 ## Tests
@@ -58,5 +57,4 @@ PXL=../claude-pxl tools/sync_art.sh
 ## Credits
 
 * [claude-pxl](https://github.com/crsolver/claude-pxl) (MIT) — pixel-art-as-code tool and 3×5 font used to generate every sprite.
-* [Agent Sprite Forge](https://github.com/0x0funky/agent-sprite-forge) (MIT) — AI sprite/animation/map pipeline, installed as project skills.
 * [ForgeSkills](https://github.com/sekaikx/ForgeSkills) (Apache-2.0) — gameplay-systems, Godot pipeline, testing and impact guidelines followed by the code.
