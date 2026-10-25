@@ -1,0 +1,162 @@
+{
+  "schema": "generate2dsprite.master.v1",
+  "tool": {
+    "name": "master_still",
+    "version": "0.4.0"
+  },
+  "created": "2026-10-25T04:37:43.949Z",
+  "name": "clan_hero",
+  "subject": "a young knight hero",
+  "identity_recap": "young knight hero (a young knight with spiky white hair and green-teal eyes, white plate armour with gold trim (rounded pauldrons with red shields bearing a gold cross, a breastplate with a gold lion crest), a blue tunic with gold-trimmed hem under the armour, a brown belt with a red sash, black puffy trousers, white plate knee guards and greaves with gold edges, brown leather boots, dark grey gloves, a long blue cape with a gold border, holding one long steel longsword in both hands)",
+  "facing": "left",
+  "view": "side view (profile to three-quarter)",
+  "finish": "hd",
+  "class": "hero",
+  "framing": {
+    "canvas": [
+      1024,
+      1024
+    ],
+    "subject_height_px": 788,
+    "top_margin_px": 138,
+    "lead_px": 0,
+    "preset": "hero",
+    "subject_bbox": [
+      250,
+      137,
+      774,
+      927
+    ],
+    "anchor": [
+      650.0,
+      927.0
+    ],
+    "opaque_area_px": 170646,
+    "width_limited": false
+  },
+  "key": "#FF00FF",
+  "files": {
+    "master": {
+      "path": "master.png",
+      "sha256": "5320b9adc2f550b0c648264f39b5c3499b0bbf112f9ebc4b4ea1c381a87971d6",
+      "bytes": 352844,
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    "cutout": {
+      "path": "master_rgba.png",
+      "sha256": "25f850cee13bc8ebf5e3367db48842b5c86b6f412e8d5f932bf4228528c6c0a4",
+      "bytes": 420474,
+      "size": [
+        1024,
+        1024
+      ]
+    },
+    "source": {
+      "path": "source.png",
+      "sha256": "9e522f4761e42a5bfdeb7ca5f5f1423a5f31b13479e0c45e30ed402ef13c588c",
+      "bytes": 211274,
+      "size": [
+        476,
+        622
+      ]
+    },
+    "spec": {
+      "path": "spec.json",
+      "sha256": "ac65072de59841dfdd115e0064215ced62a58e050a7f6e83bc8b69f08647501d",
+      "bytes": 1401
+    },
+    "prompt": null
+  },
+  "references": [],
+  "transform": {
+    "mapping": "master = scale * source + offset (continuous pixel coordinates: pixel i spans [i, i + 1))",
+    "source_size": [
+      476,
+      622
+    ],
+    "source_subject_bbox": [
+      35,
+      18,
+      436,
+      622
+    ],
+    "crop_box": [
+      29,
+      12,
+      442,
+      622
+    ],
+    "crop_margin_px": 6,
+    "scale": 1.304635761589404,
+    "offset": [
+      204.75827814569539,
+      114.51655629139073
+    ],
+    "canvas": [
+      1024,
+      1024
+    ],
+    "resampler": "lanczos",
+    "premultiplied": true,
+    "alpha_floor_px": 1936,
+    "subject_parts": 1,
+    "ignored_parts": 4,
+    "ignored_px": 4,
+    "source_touches": [
+      "bottom"
+    ],
+    "key_rgb": [
+      255,
+      0,
+      255
+    ]
+  },
+  "route": "existing",
+  "provenance": {
+    "command": "external",
+    "run": null,
+    "take": null,
+    "source_name": "clan_hero_magenta.png",
+    "source_sha256": "9e522f4761e42a5bfdeb7ca5f5f1423a5f31b13479e0c45e30ed402ef13c588c",
+    "media": null,
+    "media_cli_source": null,
+    "edit": null
+  },
+  "matte": {
+    "requested": "soft",
+    "key_estimate": {
+      "key": [
+        255.0,
+        0.0,
+        255.0
+      ],
+      "source": "border_median",
+      "valid": true,
+      "ring_share": 0.9814579482439926,
+      "coverage": 0.6610993271906833,
+      "distance_from_declared": 0.0
+    },
+    "quality": "soft",
+    "interior_despill": true,
+    "qa": {
+      "opaque_key_px": 0,
+      "outer_ring_spill_fraction": 0.0,
+      "semitransparent_fraction": 0.0366657032659285,
+      "enclosed_key_pockets": 0,
+      "key_hued_px": 0,
+      "visible_px": 100339
+    },
+    "key_choice": {
+      "status": "ok",
+      "overlap_share": 0.0,
+      "rule": "reject a key when more than 0.5% of subject pixels have key dominance >= 40; first acceptable candidate wins"
+    }
+  },
+  "warnings": [
+    "the subject touches the bottom edge of the still and may be cut off: regenerate or edit it with more margin",
+    "the subject is upscaled x1.30 (604 px source height): detail will be soft; ask the route for a larger figure"
+  ]
+}
