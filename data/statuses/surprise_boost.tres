@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusEffectData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/status_effect_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"surprise_boost"
+display_name = "Surprise"
+description = "Caught them off guard: +50% speed, +25% attack."
+duration_turns = 2
+atk_mult = 1.25
+spd_mult = 1.5
+color = Color(0.96, 0.82, 0.42, 1)

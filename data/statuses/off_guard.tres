@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusEffectData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/status_effect_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"off_guard"
+display_name = "Off-Guard"
+description = "Ambushed: defense halved, speed -25%."
+duration_turns = 2
+def_mult = 0.5
+spd_mult = 0.75
+color = Color(0.78, 0.26, 0.29, 1)

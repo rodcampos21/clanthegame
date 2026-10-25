@@ -1,0 +1,16 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/statuses/burning.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"ember"
+display_name = "Ember"
+description = "Small fireball."
+kind = 1
+element = &"fire"
+power = 6
+mp_cost = 3
+status_chance = 0.3
+applies_status = ExtResource("2")

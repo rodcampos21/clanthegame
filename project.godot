@@ -1,0 +1,75 @@
+; Engine configuration file.
+config_version=5
+
+[application]
+
+config/name="Clan - Overworld Encounter Prototype"
+config/description="Visible-enemy turn-based RPG test: stealth strikes, ambushes, CTB battles."
+run/main_scene="res://scenes/overworld/overworld.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+
+GameState="*res://scripts/autoload/game_state.gd"
+BattleTransition="*res://scripts/autoload/battle_transition_manager.gd"
+
+[display]
+
+; 320x180 virtual resolution, scaled by whole numbers only (pixel-perfect).
+window/size/viewport_width=320
+window/size/viewport_height=180
+window/size/window_width_override=1280
+window/size/window_height_override=720
+window/stretch/mode="viewport"
+window/stretch/scale_mode="integer"
+
+[input]
+
+move_left={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194319), Object(InputEventKey,"physical_keycode":65)]
+}
+move_right={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194321), Object(InputEventKey,"physical_keycode":68)]
+}
+move_up={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194320), Object(InputEventKey,"physical_keycode":87)]
+}
+move_down={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194322), Object(InputEventKey,"physical_keycode":83)]
+}
+sneak={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194325)]
+}
+strike={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":90), Object(InputEventKey,"physical_keycode":32), Object(InputEventKey,"physical_keycode":74)]
+}
+toggle_crt={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194333)]
+}
+toggle_debug={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"physical_keycode":4194332)]
+}
+
+[layer_names]
+
+2d_physics/layer_1="world"
+2d_physics/layer_2="player"
+2d_physics/layer_3="enemies"
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/canvas_textures/default_texture_filter=0
+; claude-pxl art is authored on an integer grid: keep it there.
+2d/snap/snap_2d_transforms_to_pixel=true
+2d/snap/snap_2d_vertices_to_pixel=true
+environment/defaults/default_clear_color=Color(0.102, 0.078, 0.137, 1)

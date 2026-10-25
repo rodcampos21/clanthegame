@@ -1,0 +1,102 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://scripts/overworld/overworld.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/overworld/overworld_map.gd" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/player.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/overworld/overworld_enemy.tscn" id="4"]
+[ext_resource type="Resource" path="res://data/combatants/slime.tres" id="5"]
+[ext_resource type="Resource" path="res://data/combatants/slime_red.tres" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/slime_red.png" id="7"]
+[ext_resource type="Script" path="res://scripts/skills/combatant_stats.gd" id="cs"]
+
+[node name="Overworld" type="Node2D"]
+script = ExtResource("1")
+
+[node name="Map" type="Node2D" parent="."]
+script = ExtResource("2")
+
+[node name="Actors" type="Node2D" parent="."]
+y_sort_enabled = true
+
+[node name="Player" parent="Actors" instance=ExtResource("3")]
+position = Vector2(56, 72)
+
+[node name="SlimePath" parent="Actors" instance=ExtResource("4")]
+position = Vector2(200, 92)
+enemy_id = &"slime_path"
+encounter = Array[ExtResource("cs")]([ExtResource("5")])
+patrol_points = PackedVector2Array(-56, 0, 56, 0)
+
+[node name="SlimeGrove" parent="Actors" instance=ExtResource("4")]
+position = Vector2(360, 120)
+enemy_id = &"slime_grove"
+encounter = Array[ExtResource("cs")]([ExtResource("5"), ExtResource("5")])
+patrol_points = PackedVector2Array(0, -40, 40, -40, 40, 30, 0, 30)
+
+[node name="RedSlime" parent="Actors" instance=ExtResource("4")]
+position = Vector2(470, 280)
+enemy_id = &"red_slime"
+encounter = Array[ExtResource("cs")]([ExtResource("6"), ExtResource("5")])
+patrol_points = PackedVector2Array(-60, 0, 40, 0)
+overworld_texture = ExtResource("7")
+overworld_hframes = 1
+patrol_speed = 32.0
+chase_speed = 66.0
+view_distance = 100.0
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Status" type="PanelContainer" parent="HUD"]
+offset_left = 4.0
+offset_top = 4.0
+offset_right = 90.0
+offset_bottom = 18.0
+
+[node name="Margin" type="MarginContainer" parent="HUD/Status"]
+layout_mode = 2
+
+[node name="VBox" type="VBoxContainer" parent="HUD/Status/Margin"]
+layout_mode = 2
+
+[node name="HP" type="Label" parent="HUD/Status/Margin/VBox"]
+layout_mode = 2
+text = "HP 60/60  MP 20/20"
+
+[node name="Statuses" type="Label" parent="HUD/Status/Margin/VBox"]
+modulate = Color(0.42, 0.31, 0.54, 1)
+layout_mode = 2
+
+[node name="Hint" type="Label" parent="HUD"]
+offset_left = 4.0
+offset_top = 168.0
+offset_right = 316.0
+offset_bottom = 176.0
+theme_override_colors/font_color = Color(0.957, 0.941, 0.902, 0.75)
+theme_override_colors/font_shadow_color = Color(0.102, 0.078, 0.137, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "ARROWS MOVE  SHIFT SNEAK  Z STRIKE  F1 DEBUG  F2 CRT"
+
+[node name="Toast" type="Label" parent="HUD"]
+visible = false
+offset_left = 0.0
+offset_top = 30.0
+offset_right = 320.0
+offset_bottom = 42.0
+theme_override_colors/font_color = Color(0.961, 0.824, 0.42, 1)
+theme_override_colors/font_shadow_color = Color(0.102, 0.078, 0.137, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="Debug" type="Label" parent="HUD"]
+visible = false
+offset_left = 4.0
+offset_top = 24.0
+offset_right = 316.0
+offset_bottom = 100.0
+theme_override_colors/font_color = Color(0.961, 0.824, 0.42, 1)
+theme_override_colors/font_shadow_color = Color(0.102, 0.078, 0.137, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1

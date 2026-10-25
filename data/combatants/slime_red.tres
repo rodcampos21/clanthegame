@@ -1,0 +1,22 @@
+[gd_resource type="Resource" script_class="CombatantStats" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/combatant_stats.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="sd"]
+[ext_resource type="Resource" path="res://data/skills/tackle.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/ember.tres" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/slime_red.png" id="tex"]
+
+[resource]
+script = ExtResource("1")
+id = &"slime_red"
+display_name = "Red Slime"
+max_hp = 34
+max_mp = 9
+atk = 9
+mag = 7
+def = 5
+spd = 11
+reward_points = 2
+skills = Array[ExtResource("sd")]([ExtResource("2"), ExtResource("3")])
+battle_texture = ExtResource("tex")
+battle_hframes = 1

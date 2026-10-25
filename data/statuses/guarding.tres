@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="StatusEffectData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/status_effect_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"guarding"
+display_name = "Guard"
+description = "Defense doubled until the next turn."
+duration_turns = 1
+def_mult = 2.0
+color = Color(0.29, 0.56, 0.82, 1)

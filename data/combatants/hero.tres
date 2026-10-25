@@ -1,0 +1,24 @@
+[gd_resource type="Resource" script_class="CombatantStats" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/combatant_stats.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="sd"]
+[ext_resource type="Resource" path="res://data/skills/attack.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/power_slash.tres" id="3"]
+[ext_resource type="Resource" path="res://data/skills/fire.tres" id="4"]
+[ext_resource type="Resource" path="res://data/skills/guard.tres" id="5"]
+[ext_resource type="Resource" path="res://data/skills/heal.tres" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/hero_side.png" id="tex"]
+
+[resource]
+script = ExtResource("1")
+id = &"hero"
+display_name = "Hero"
+max_hp = 60
+max_mp = 20
+atk = 9
+mag = 8
+def = 5
+spd = 12
+skills = Array[ExtResource("sd")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])
+battle_texture = ExtResource("tex")
+battle_hframes = 2

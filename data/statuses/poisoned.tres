@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="StatusEffectData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/status_effect_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"poisoned"
+display_name = "Poison"
+description = "Loses HP every turn. Lingers after battle."
+duration_turns = 3
+damage_per_turn = 3
+persists_outside_battle = true
+color = Color(0.42, 0.31, 0.54, 1)

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CombatantStats" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/combatant_stats.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="sd"]
+[ext_resource type="Resource" path="res://data/skills/tackle.tres" id="2"]
+[ext_resource type="Resource" path="res://data/skills/poison_spit.tres" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/slime.png" id="tex"]
+
+[resource]
+script = ExtResource("1")
+id = &"slime"
+display_name = "Slime"
+max_hp = 22
+max_mp = 6
+atk = 7
+mag = 5
+def = 3
+spd = 9
+skills = Array[ExtResource("sd")]([ExtResource("2"), ExtResource("3")])
+battle_texture = ExtResource("tex")
+battle_hframes = 2

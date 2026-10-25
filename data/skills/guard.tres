@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/statuses/guarding.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"guard"
+display_name = "Guard"
+description = "Double defense until your next turn."
+kind = 3
+target = 2
+power = 0
+accuracy = 1.0
+applies_status = ExtResource("2")

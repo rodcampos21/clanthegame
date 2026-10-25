@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"power_slash"
+display_name = "Power Slash"
+description = "Heavy blow. Cooldown 2 turns."
+kind = 0
+power = 10
+cooldown_turns = 2
+accuracy = 0.9
+requires = Array[StringName]([&"attack"])

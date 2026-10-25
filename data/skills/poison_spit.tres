@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillData" format=3]
+
+[ext_resource type="Script" path="res://scripts/skills/skill_data.gd" id="1"]
+[ext_resource type="Resource" path="res://data/statuses/poisoned.tres" id="2"]
+
+[resource]
+script = ExtResource("1")
+id = &"poison_spit"
+display_name = "Poison Spit"
+description = "Weak hit, 60% chance to Poison."
+kind = 1
+element = &"poison"
+power = 2
+mp_cost = 3
+cooldown_turns = 2
+status_chance = 0.6
+applies_status = ExtResource("2")
