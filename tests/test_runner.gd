@@ -14,7 +14,8 @@ const BATTLE := preload("res://scenes/battle/battle.tscn")
 const OVERWORLD := preload("res://scenes/overworld/overworld.tscn")
 const GUARD := preload("res://data/skills/guard.tres")
 const A := EncounterRules.Advantage
-const HD_ANIMS: Array[StringName] = [&"idle", &"attack", &"hurt", &"death", &"defend", &"advance"]
+const HD_ANIMS: Array[StringName] = [&"idle", &"attack", &"hurt", &"death", &"defend", &"advance", &"skill", &"victory"]
+const ATTACK := preload("res://data/skills/attack.tres")
 
 var failures := 0
 var passes := 0
@@ -175,7 +176,7 @@ func test_hd_knight_frames() -> void:
 			continue
 		for i in f.get_frame_count(anim):
 			var tex := f.get_frame_texture(anim, i)
-			check(tex.get_height() == 192, "%s[%d] cell is 192 px tall" % [anim, i])
+			check(tex.get_height() == 224, "%s[%d] cell is 224 px tall" % [anim, i])
 			# feet sit on the shared origin row (190): last opaque row of every frame
 			var used := tex.get_image().get_used_rect()
 			check(used.end.y == int(HERO.battle_frames_origin.y) + 1 or anim == &"death",
@@ -207,9 +208,21 @@ func test_hd_battle_view() -> void:
 		check(spr.animation == &"defend", "Guarding shows the defend pose (%s)" % spr.animation)
 		hero.remove_status(&"guarding")
 		check(spr.animation == &"idle", "back to idle when Guard ends")
-		var t0 := Time.get_ticks_msec()
-		await v.lunge(1.0)
-		check(spr.animation == &"idle" and not v._busy, "attack plays and returns to idle (%d ms)" % (Time.get_ticks_msec() - t0))
+		# Attack: run up to the target (advance), swing, stay; run back after the hit
+		var foe: BattleActorView = b.views[b.enemies[0]]
+		var seen := {}
+		spr.animation_changed.connect(func() -> void: seen[spr.animation] = true)
+		await v.perform(ATTACK, foe, 1.0)
+		check(seen.has(&"advance") and seen.has(&"attack"), "attack runs in (advance) then swings (%s)" % [seen.keys()])
+		var gap := foe.position.x - v.position.x
+		check(v.is_away() and absf(gap - BattleActorView.MELEE_GAP) < 1.0,
+			"knight stands in front of the enemy (gap %.1f)" % gap)
+		await v.return_home()
+		check(not v.is_away() and spr.animation == &"idle" and spr.scale.x > 0,
+			"runs back home, facing the enemies again")
+		await v.celebrate()
+		check(spr.animation == &"victory" and spr.frame == spr.sprite_frames.get_frame_count(&"victory") - 1,
+			"victory plays and holds the cheer")
 		hero.hp = 0
 		await v.die()
 		check(spr.animation == &"death" and spr.frame == spr.sprite_frames.get_frame_count(&"death") - 1,

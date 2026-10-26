@@ -2,15 +2,16 @@
 ##
 ## Sheets come from tools/sprite_pipeline (AI strips -> real pixel art, locked palette).
 ## Every cell has the SAME origin: the point between the feet on the ground, at ORIGIN
-## (pixels from the cell's top-left). Cells are 192 px tall; the attack is wider (256) because
-## the slash reaches forward, but its origin is the same, so swapping animations never jumps.
+## (pixels from the cell's top-left). Cells are 224 px tall (room for the raised sword in
+## victory); attack/skill are wider because the slash reaches forward, but the origin is the
+## same everywhere, so swapping animations never jumps.
 ##
 ## Run:  godot --headless --path . --script res://tools/build_knight_frames.gd
 extends SceneTree
 
 const DIR := "res://assets/sprites/knight/"
 const OUT := DIR + "knight_frames.tres"
-const ORIGIN := Vector2(96, 190)
+const ORIGIN := Vector2(96, 222)   # must match CombatantStats.battle_frames_origin
 const BASE_FPS := 10.0     # frame duration below is in ms; SpriteFrames stores it relative to this
 
 ## name: [sheet, cell width, frame count, ms per frame, loop]
@@ -21,6 +22,8 @@ const ANIMS := {
 	&"advance": ["advance.png", 192, 4, [110, 110, 110, 110], true],
 	&"death": ["death.png", 192, 5, [120, 160, 180, 200, 1000], false],
 	&"defend": ["defend.png", 192, 2, [120, 400], false],
+	&"skill": ["skill.png", 272, 6, [180, 180, 140, 140, 260, 240], false],
+	&"victory": ["victory.png", 192, 4, [200, 180, 220, 600], false],
 }
 
 

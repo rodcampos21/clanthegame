@@ -21,7 +21,7 @@ extends Resource
 ## 320x180 grid), so battle_frames_scale = 0.25 shows 1 art pixel = 1 screen pixel.
 @export var battle_frames: SpriteFrames
 ## Point between the feet on the ground, in pixels from each cell's top-left.
-@export var battle_frames_origin: Vector2 = Vector2(96, 190)
+@export var battle_frames_origin: Vector2 = Vector2(96, 222)
 @export var battle_frames_scale: float = 0.25
 ## Colours of the HD art (1 px tall strip): added to the CRT palette in battle.
 @export var battle_frames_palette: Texture2D

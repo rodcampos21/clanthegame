@@ -150,10 +150,20 @@ All three shaders are in `shaders/` and work on the **virtual 320×180 grid**, s
 
 ## 4b. HD battle sprites
 
-`CombatantStats.battle_frames` (SpriteFrames) replaces the pixel strip when set. All cells share
-one origin, the point between the feet: `battle_frames_origin = (96, 190)`. `BattleActorView`
-maps game events to animations: rest = `idle` (or `defend` while Guarding), offensive skill →
-`attack`, hit → `hurt` (with flash + shake), KO → `death` (holds the last frame). Sheets, frame
+`CombatantStats.battle_frames` (SpriteFrames) replaces the pixel strip when set. All cells are
+224 px tall and share one origin, the point between the feet: `battle_frames_origin = (96, 222)`.
+`BattleActorView` maps game events to animations:
+
+| Event | Animation |
+|---|---|
+| waiting | `idle` (`defend` while Guarding) |
+| skill with `approach = true` (Attack, Power Slash) | `advance` run to `MELEE_GAP` px in front of the target → `SkillData.user_anim` → stays there while damage resolves → runs back (`advance`, mirrored) |
+| skill without approach (Fire, Heal) | `user_anim` in place (`skill`) |
+| hit | `hurt` + flash + shake |
+| KO | `death` (holds the last frame) |
+| victory | `victory` (holds the cheer) |
+
+Which animation a skill uses is data: `SkillData.user_anim` / `approach` in `data/skills/*.tres`. Sheets, frame
 timings and how they were produced: `assets/sprites/knight/`, `tools/build_knight_frames.gd`,
 `tools/sprite_pipeline/README.md`.
 
@@ -163,11 +173,11 @@ or copy its tween; the shader has no scene-specific code.
 ## 5. Verification
 
 ```
-godot --headless --path . res://tests/test_runner.tscn          # 101 checks, exit code 0/1
+godot --headless --path . res://tests/test_runner.tscn          # 126 checks, exit code 0/1
 xvfb-run godot --path . --rendering-driver opengl3 res://tests/capture.tscn -- /tmp/shots
 ```
 
-`test_runner` (101 checks) covers HD frames (every animation, shared origin), the HD battle view
+`test_runner` (126 checks) covers HD frames (every animation, shared origin), the HD battle view
 (stretch mode, 1:1 scale, idle/defend/attack/death), Guard lasting until the next turn, the skill pipeline, cooldowns, status modifiers, advantage geometry, both
 openings, persistence across battle, a full automated battle (loop test), and three overworld
 scenarios (cone → suspicious → alert → chase; back strike = PLAYER; chased from behind = ENEMY).

@@ -12,3 +12,5 @@ power = 10
 cooldown_turns = 2
 accuracy = 0.9
 requires = Array[StringName]([&"attack"])
+user_anim = &"skill"
+approach = true

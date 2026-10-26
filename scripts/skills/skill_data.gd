@@ -15,6 +15,12 @@ enum Target { SINGLE_ENEMY, ALL_ENEMIES, SELF, SINGLE_ALLY }
 @export var target: Target = Target.SINGLE_ENEMY
 @export var element: StringName = &"none"
 
+@export_group("Presentation")
+## HD battle animation the user plays (attack, skill...). Empty = attack for offensive skills.
+@export var user_anim: StringName = &""
+## Melee: the user runs up to the target (advance), performs, and runs back afterwards.
+@export var approach: bool = false
+
 @export_group("Numbers")
 @export var power: int = 10
 @export var mp_cost: int = 0

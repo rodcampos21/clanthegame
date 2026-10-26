@@ -14,7 +14,7 @@ from normalize_strip import remove_white
 OUTLINE = (34, 28, 40)
 
 
-def pixelize(img, height, colors, palette_from=None):
+def pixelize(img, height, colors, palette_from=None, extra_colors=0):
     """Quantiza a imagem grande numa paleta curta ANTES de reduzir, e reduz por voto da cor
     mais frequente em cada bloco: as cores continuam puras (a média misturava branco com dourado
     e dava bege)."""
@@ -23,7 +23,17 @@ def pixelize(img, height, colors, palette_from=None):
     a = np.asarray(rgba)
     op = a[..., 3] > 128
     if palette_from is not None:   # paleta travada (a da semente): todas as animações com as mesmas cores
-        palette = np.asarray(Image.open(palette_from).convert("RGB")).reshape(-1, 3)
+        palette = np.asarray(Image.open(palette_from).convert("RGB")).reshape(-1, 3).astype(int)
+        if extra_colors:
+            # efeitos (brilho dourado da habilidade) não existem na paleta do Cavaleiro: as cores
+            # que ficam longe de toda a paleta viram até N cores extras só desta animação
+            px = a[..., :3][op].reshape(-1, 3).astype(int)
+            d = ((px[:, None, :] - palette[None]) ** 2).sum(-1).min(1)
+            far = px[d > 40 ** 2]
+            if len(far) > 50:
+                ex = Image.fromarray(far.astype("uint8").reshape(1, -1, 3)).quantize(extra_colors, method=Image.Quantize.MEDIANCUT, kmeans=2)
+                extra = np.array(ex.getpalette()[: extra_colors * 3]).reshape(-1, 3)
+                palette = np.vstack([palette, extra])
         colors = len(palette)
         pal_img = Image.new("P", (1, 1))
         pal_img.putpalette(palette.astype("uint8").ravel().tolist() + [0] * (768 - colors * 3))

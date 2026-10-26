@@ -227,6 +227,10 @@ func _finish(r: StringName) -> void:
 			banner.text = "ESCAPED"
 			banner.add_theme_color_override("font_color", Color("f4f0e6"))
 	print("[battle] finished: %s after %d turns | %s" % [r, turn_count, GameState.hero.debug_state()])
+	if r == &"victory" and not fast:
+		for c in party:
+			if c.is_alive() and views[c].has_anim(&"victory"):
+				views[c].celebrate()
 	await _wait(1.2)
 	battle_finished.emit(r)
 	if return_on_finish:
@@ -357,13 +361,22 @@ func _first_alive(list: Array[Combatant]) -> Combatant:
 # ------------------------------------------------------------------ presentation
 
 func _present(events: Array[Dictionary]) -> void:
+	var mover: BattleActorView = null      # HD user that ran up to its target
 	for ev in events:
 		match ev.type:
 			"use":
 				var u: Combatant = ev.user
+				var dir := 1.0 if u.side == Combatant.Team.PARTY else -1.0
 				_log("%s: %s" % [u.display_name.to_upper(), ev.skill.display_name.to_upper()])
-				if not fast and ev.skill.is_offensive():
-					await views[u].lunge(1.0 if u.side == Combatant.Team.PARTY else -1.0)
+				if fast:
+					pass
+				elif views[u].has_anim(&"idle"):
+					var tv: BattleActorView = _first_target_view(events, u)
+					await views[u].perform(ev.skill, tv, dir)
+					if views[u].is_away():
+						mover = views[u]
+				elif ev.skill.is_offensive():
+					await views[u].lunge(dir)
 			"damage":
 				_popup(ev.target, str(ev.amount), Color("f4f0e6"))
 				if not fast:
@@ -390,6 +403,14 @@ func _present(events: Array[Dictionary]) -> void:
 				_log("%s FAILED (%s)" % [ev.skill.display_name.to_upper(), ev.reason])
 		_refresh_ui()
 		await _wait(0.25)
+	if mover != null:
+		await mover.return_home()
+
+func _first_target_view(events: Array[Dictionary], user: Combatant) -> BattleActorView:
+	for ev in events:
+		if ev.has("target") and ev.target != user and views.has(ev.target):
+			return views[ev.target]
+	return null
 
 func _popup(target: Combatant, text: String, color: Color, dy: int = 0) -> void:
 	if fast:

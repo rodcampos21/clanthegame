@@ -14,3 +14,4 @@ power = 9
 mp_cost = 4
 status_chance = 0.4
 applies_status = ExtResource("2")
+user_anim = &"skill"

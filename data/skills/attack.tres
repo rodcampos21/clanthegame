@@ -9,3 +9,5 @@ display_name = "Attack"
 description = "A basic strike."
 kind = 0
 power = 4
+user_anim = &"attack"
+approach = true

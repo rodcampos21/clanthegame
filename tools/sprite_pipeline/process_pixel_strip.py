@@ -79,8 +79,10 @@ def main():
     ap.add_argument("image"); ap.add_argument("name")
     ap.add_argument("--frames", type=int, required=True); ap.add_argument("--ref", type=int, default=-1)
     ap.add_argument("--seed-height", type=int, default=174); ap.add_argument("--palette", default="knight_palette.png")
-    ap.add_argument("--ms", default="120"); ap.add_argument("--scale-by", default="height"); ap.add_argument("--rows", type=int, default=1); ap.add_argument("--anchor", default="feet"); ap.add_argument("--anchor-x", type=float, default=None)
+    ap.add_argument("--ms", default="120"); ap.add_argument("--scale-by", default="height"); ap.add_argument("--rows", type=int, default=1); ap.add_argument("--anchor", default="feet"); ap.add_argument("--extra-colors", type=int, default=0); ap.add_argument("--cell-h", type=int, default=192); ap.add_argument("--anchor-x", type=float, default=None)
     a = ap.parse_args()
+    global CELL
+    CELL = a.cell_h
     frames = split_row(a.image, a.frames, a.rows)
     if a.scale_by == "head":
         # largura da cabeça (faixa de cima do cabelo até o queixo) igual à do idle 192
@@ -99,7 +101,7 @@ def main():
         ref = frames[a.ref]
         s = a.seed_height / ref.height
     print("alturas brutas", [f.height for f in frames], "escala", round(s, 4))
-    sprites = [pixelize(f, max(8, round(f.height * s)), 0, a.palette) for f in frames]
+    sprites = [pixelize(f, max(8, round(f.height * s)), 0, a.palette, a.extra_colors) for f in frames]
     # âncora x comum = a do idle (pés no centro da célula); cada quadro alinhado pelos pés
     # célula: altura 192 sempre; largura cresce se o golpe passar da célula. A ORIGEM (ponto entre
     # os pés, na sola) fica em (ox, 190) em todas as folhas -> no Godot basta alinhar esse ponto.
@@ -121,10 +123,10 @@ def main():
             anchors.append((float(np.nonzero(al)[1].mean()), sole))
     else:
         anchors = [feet_anchor(sp) for sp in sprites]
-    ox = int(max(CELL // 2, max(fx for fx, _ in anchors) + 2))
+    ox = int(max(96, max(fx for fx, _ in anchors) + 2))
     right = max(sp.width - fx for sp, (fx, _) in zip(sprites, anchors))
     W = int(np.ceil((ox + right + 2) / 16) * 16)
-    W = max(W, CELL)
+    W = max(W, 192)
     out = []
     for sp, (fx, sole) in zip(sprites, anchors):
         c = Image.new("RGBA", (W, CELL), (0, 0, 0, 0))

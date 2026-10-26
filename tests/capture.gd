@@ -63,10 +63,11 @@ func _ready() -> void:
 	await _frames(2)
 	var target: Combatant = battle.enemies.filter(func(e: Combatant) -> bool: return e.is_alive())[0]
 	battle.command_chosen.emit({ "target": target })
-	await _seconds(0.12)
-	await shot("10_attack_windup")
-	await _seconds(0.14)
-	await shot("11_attack_swing")
+	await _seconds(0.15)
+	await shot("10_attack_run")
+	for i in 8:   # run-up -> swing -> hit, one shot every 0.1 s
+		await _seconds(0.1)
+		await shot("11_attack_%d" % i)
 	var waited := 0.0
 	while not battle.command_panel.visible and waited < 12.0:
 		await _seconds(0.1)

@@ -5,8 +5,8 @@
 ##   * pixel strip (battle_texture): 320x180-grid art, integer scale 2, frame cycling
 ##   * HD SpriteFrames (battle_frames): 1280x720 art shown 1:1 (scale 0.25 on the 320x180
 ##     grid, rendered at full resolution because the battle runs in canvas_items stretch).
-##     Animations: idle (rest), attack (lunge), hurt (hit), death (KO), defend (while
-##     Guarding), advance/victory/skill when present.
+##     Animations: idle (rest), defend (while Guarding), advance (run to a melee target and
+##     back), attack/skill (SkillData.user_anim), hurt (hit), death (KO), victory.
 class_name BattleActorView
 extends Node2D
 
@@ -135,16 +135,48 @@ func _draw() -> void:
 		var y := -int(sprite_height()) - 8 - int(_anim_t * 6.0) % 2
 		draw_colored_polygon(PackedVector2Array([Vector2(-3, y), Vector2(4, y), Vector2(0, y + 4)]), GOLD)
 
-func lunge(direction: float) -> void:
-	if has_anim(&"attack"):
-		# HD: the swing itself carries the motion; step in a little during the wind-up
-		var step := create_tween()
-		step.tween_property(self, "position:x", _home.x + 6 * direction, 0.16)
-		await play_once(&"attack")
-		var back := create_tween()
-		back.tween_property(self, "position:x", _home.x, 0.10)
-		await back.finished
+## Grid px between the user's feet and the target's when striking in melee: the HD slash
+## reaches ~37 px forward, so the blade tip lands on the middle of a 32 px slime.
+const MELEE_GAP := 36.0
+const RUN_SPEED := 260.0     # grid px / s while running in or back
+
+## HD skill presentation: optional run-up to the target (advance), then the skill's
+## animation. Stays at the target; BattleManager calls return_home() after the hit lands.
+func perform(skill: SkillData, target: BattleActorView, direction: float) -> void:
+	var anim := skill.user_anim
+	if anim == &"" and skill.is_offensive():
+		anim = &"attack"
+	if skill.approach and target != null and target != self and has_anim(&"advance"):
+		var dest := target.position + Vector2(-MELEE_GAP * direction, 0)
+		await run_to(dest)
+	if anim != &"" and has_anim(anim):
+		await play_once(anim)     # ends back on the rest pose, still standing at the target
+
+func run_to(dest: Vector2, backwards := false) -> void:
+	var dist := position.distance_to(dest)
+	if dist < 1.0:
 		return
+	_busy = true
+	if backwards:
+		_hd.scale.x = -_hd.scale.x            # turn around to run home
+	_hd.play(&"advance")
+	var tw := create_tween()
+	tw.tween_property(self, "position", dest, clampf(dist / RUN_SPEED, 0.2, 0.6))
+	await tw.finished
+	if backwards:
+		_hd.scale.x = -_hd.scale.x
+	_busy = false
+	_play_rest()
+
+func is_away() -> bool:
+	return position.distance_to(_home) > 1.0
+
+func return_home() -> void:
+	if is_away() and combatant.is_alive():
+		await run_to(_home, true)
+	position = _home
+
+func lunge(direction: float) -> void:
 	var tw := create_tween()
 	tw.tween_property(self, "position:x", _home.x + 10 * direction, 0.08)
 	tw.tween_property(self, "position:x", _home.x, 0.12)
@@ -153,10 +185,11 @@ func lunge(direction: float) -> void:
 func hit(strong: bool) -> void:
 	## ForgeSkills vfx-impact: confirm every hit — flash + shake (+ hitstop in manager).
 	_flash_mat.set_shader_parameter("flash", 1.0)
+	var base_x := position.x
 	var tw := create_tween()
 	for i in (4 if strong else 2):
-		tw.tween_property(self, "position:x", _home.x + (2 if i % 2 == 0 else -2), 0.03)
-	tw.tween_property(self, "position:x", _home.x, 0.03)
+		tw.tween_property(self, "position:x", base_x + (2 if i % 2 == 0 else -2), 0.03)
+	tw.tween_property(self, "position:x", base_x, 0.03)
 	tw.parallel().tween_callback(func() -> void: _flash_mat.set_shader_parameter("flash", 0.0)).set_delay(0.08)
 	if has_anim(&"hurt") and combatant.is_alive():
 		play_once(&"hurt")          # runs alongside the shake; returns to rest by itself
@@ -182,6 +215,12 @@ func die() -> void:
 
 func top() -> Vector2:
 	return position + Vector2(0, -sprite_height() - 4)
+
+func celebrate() -> void:
+	if has_anim(&"victory") and combatant.is_alive():
+		_busy = true
+		_hd.play(&"victory")
+		await _hd.animation_finished
 
 func debug_state() -> String:
 	if _hd:
