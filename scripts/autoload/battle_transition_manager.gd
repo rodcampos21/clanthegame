@@ -61,6 +61,28 @@ func _make_rect(n: String, shader: Shader) -> ColorRect:
 func set_crt(enabled: bool) -> void:
 	_crt.visible = enabled
 
+## HD battles (canvas_items stretch) run the optional CRT pass on the 1280x720 output grid and
+## add the HD sprites' palettes to clan16, so the filter does not collapse HD art into 4x4
+## blocks of the 16 base colours. Call with no palettes to go back to the 320x180 look.
+func set_display_grid(grid: Vector2, extra_palettes: Array[Texture2D] = []) -> void:
+	var m: ShaderMaterial = _crt.material
+	m.set_shader_parameter("virtual_size", grid)
+	var pal := PALETTE as Texture2D
+	if not extra_palettes.is_empty():
+		var colors: Array[Color] = []
+		for t: Texture2D in [PALETTE as Texture2D] + extra_palettes:
+			var img := t.get_image()
+			if img.is_compressed():
+				img.decompress()
+			for x: int in img.get_width():
+				colors.append(img.get_pixel(x, 0))
+		var merged := Image.create(colors.size(), 1, false, Image.FORMAT_RGBA8)
+		for i: int in colors.size():
+			merged.set_pixel(i, 0, colors[i])
+		pal = ImageTexture.create_from_image(merged)
+	m.set_shader_parameter("palette_tex", pal)
+	m.set_shader_parameter("palette_size", pal.get_width())
+
 # ---------------------------------------------------------------- public API
 
 func start_battle(enemy_id: StringName, enemies: Array[CombatantStats],

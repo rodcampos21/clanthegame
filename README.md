@@ -47,6 +47,16 @@ docs/ARCHITECTURE.md  node tree, system specs, shader guide
 godot --headless --path . res://tests/test_runner.tscn
 ```
 
+## HD battle sprites
+
+The hero fights as the white-haired **Knight**: 192 px pixel art drawn for a 1280×720 output
+(idle, attack, hurt, death, defend, advance). See `docs/ARCHITECTURE.md` §4b and
+`tools/sprite_pipeline/README.md`. Rebuild the SpriteFrames after editing sheets:
+
+```sh
+godot --headless --path . --script res://tools/build_knight_frames.gd
+```
+
 ## Art pipeline
 
 ```sh

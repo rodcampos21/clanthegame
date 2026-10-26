@@ -12,7 +12,9 @@ const POWER_SLASH := preload("res://data/skills/power_slash.tres")
 const POISONED := preload("res://data/statuses/poisoned.tres")
 const BATTLE := preload("res://scenes/battle/battle.tscn")
 const OVERWORLD := preload("res://scenes/overworld/overworld.tscn")
+const GUARD := preload("res://data/skills/guard.tres")
 const A := EncounterRules.Advantage
+const HD_ANIMS: Array[StringName] = [&"idle", &"attack", &"hurt", &"death", &"defend", &"advance"]
 
 var failures := 0
 var passes := 0
@@ -21,7 +23,8 @@ var _current := ""
 func _ready() -> void:
 	await get_tree().process_frame
 	for t in ["skill_pipeline", "cooldowns", "status_modifiers", "advantage_rules",
-			"opening_player_advantage", "opening_enemy_ambush", "persistence",
+			"opening_player_advantage", "opening_enemy_ambush", "persistence", "guard_lasts",
+			"hd_knight_frames", "hd_battle_view",
 			"battle_loop_victory", "overworld_perception", "overworld_back_strike",
 			"overworld_ambush_contact"]:
 		_current = t
@@ -136,6 +139,84 @@ func test_persistence() -> void:
 	check(not hero.has_status(&"surprise_boost"), "battle-only status cleared")
 	check(hero.hp == hero.stats.max_hp - 10, "hp carried over")
 	check(GameState.is_defeated(&"x"), "enemy marked defeated")
+
+func test_guard_lasts() -> void:
+	## "Guard: double defense until your next turn" — it must still be up while enemies act.
+	var r := _pair()
+	var hero := r[0]
+	hero.start_of_turn()
+	SkillExecutor.execute(hero, GUARD, [hero], _rng())
+	hero.end_of_turn()
+	check(hero.has_status(&"guarding"), "Guard survives the end of the turn it was used")
+	hero.start_of_turn()
+	hero.end_of_turn()
+	check(not hero.has_status(&"guarding"), "Guard is gone after the hero's next turn")
+	var slime := r[1]
+	slime.start_of_turn()
+	slime.add_status(POISONED)       # applied by someone else's action: ticks normally
+	slime.end_of_turn()
+	hero.add_status(POISONED)        # outside the hero's own turn
+	var before: int = hero.statuses.filter(func(s): return s.data.id == &"poisoned")[0].turns
+	hero.start_of_turn()
+	hero.end_of_turn()
+	var after: int = hero.statuses.filter(func(s): return s.data.id == &"poisoned")[0].turns
+	check(after == before - 1, "statuses from others still tick every turn (%d -> %d)" % [before, after])
+
+# ---------------------------------------------------------------- HD battle sprites
+
+func test_hd_knight_frames() -> void:
+	var f: SpriteFrames = HERO.battle_frames
+	check(f != null, "hero has HD battle frames")
+	if f == null:
+		return
+	for anim in HD_ANIMS:
+		check(f.has_animation(anim), "HD anim '%s' exists" % anim)
+		if not f.has_animation(anim):
+			continue
+		for i in f.get_frame_count(anim):
+			var tex := f.get_frame_texture(anim, i)
+			check(tex.get_height() == 192, "%s[%d] cell is 192 px tall" % [anim, i])
+			# feet sit on the shared origin row (190): last opaque row of every frame
+			var used := tex.get_image().get_used_rect()
+			check(used.end.y == int(HERO.battle_frames_origin.y) + 1 or anim == &"death",
+				"%s[%d] feet on the origin row (bottom=%d)" % [anim, i, used.end.y])
+	check(f.get_animation_loop(&"idle") and not f.get_animation_loop(&"attack") and not f.get_animation_loop(&"death"),
+		"idle loops; attack/death play once")
+
+func test_hd_battle_view() -> void:
+	var before := get_window().content_scale_mode
+	var enemies: Array[CombatantStats] = [SLIME]
+	GameState.begin_encounter(&"hd", enemies, A.NEUTRAL, Vector2.ZERO, Vector2.RIGHT)
+	var b: BattleManager = BATTLE.instantiate()
+	b.return_on_finish = false
+	b.rng_seed = 3
+	add_child(b)
+	await get_tree().process_frame
+	check(get_window().content_scale_mode == Window.CONTENT_SCALE_MODE_CANVAS_ITEMS,
+		"battle renders in canvas_items stretch (HD sprites at full resolution)")
+	var hero: Combatant = b.party[0]
+	var v: BattleActorView = b.views[hero]
+	var spr: AnimatedSprite2D = v._hd
+	check(spr != null, "hero view uses the HD AnimatedSprite2D")
+	if spr:
+		# 320x180 grid x4 = 1280x720 output: scale 0.25 -> 1 art pixel = 1 screen pixel
+		check(is_equal_approx(spr.scale.x * 4.0, 1.0), "HD sprite is 1:1 on a 1280x720 output (scale %s)" % spr.scale)
+		check(spr.animation == &"idle" and spr.is_playing(), "rests on idle")
+		check(v.sprite_height() > 40 and v.sprite_height() < 48, "HD height ~43 grid px (%.1f)" % v.sprite_height())
+		hero.add_status(GUARD.applies_status)
+		check(spr.animation == &"defend", "Guarding shows the defend pose (%s)" % spr.animation)
+		hero.remove_status(&"guarding")
+		check(spr.animation == &"idle", "back to idle when Guard ends")
+		var t0 := Time.get_ticks_msec()
+		await v.lunge(1.0)
+		check(spr.animation == &"idle" and not v._busy, "attack plays and returns to idle (%d ms)" % (Time.get_ticks_msec() - t0))
+		hero.hp = 0
+		await v.die()
+		check(spr.animation == &"death" and spr.frame == spr.sprite_frames.get_frame_count(&"death") - 1,
+			"death holds its last frame")
+	b.queue_free()
+	await get_tree().process_frame
+	check(get_window().content_scale_mode == before, "stretch mode restored after battle")
 
 # ---------------------------------------------------------------- loop tests
 

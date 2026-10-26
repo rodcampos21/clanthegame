@@ -1,6 +1,13 @@
 # Clan — Architecture of the overworld-encounter prototype
 
-Godot **4.7.2**, GDScript, GL Compatibility renderer, 320×180 virtual resolution.
+Godot **4.7.2**, GDScript, GL Compatibility renderer, 320×180 virtual resolution (1280×720 window).
+
+**Two stretch modes.** The overworld uses `viewport` stretch (everything rendered on the 320×180
+grid, scaled ×4 — pixel-perfect). The battle switches the window to `canvas_items` stretch in
+`BattleManager._enter_tree()` (restored on exit): layout, UI and the 16-colour art keep the same
+320×180 coordinates and ×4 look, but HD battle sprites (`CombatantStats.battle_frames`, drawn for
+1280×720, shown at scale 0.25) render at full resolution. Pixel-perfect HD needs a window that is a
+multiple of 1280×720 (720p, 1440p, 2160p); at 1080p the ×6 factor shows HD art at 1.5×.
 
 ## 0. What the two reference repos actually are (and how they are used)
 
@@ -137,6 +144,18 @@ All three shaders are in `shaders/` and work on the **virtual 320×180 grid**, s
    thin scanlines, vignette. Lives on layer 90, under the transition.
 5. **`hit_flash.gdshader`** — per-sprite on `BattleActorView`: `flash = 1` paints the silhouette
    white for a few frames (no alpha blending).
+6. **HD battles + CRT** — during a battle with HD sprites, `BattleTransition.set_display_grid()`
+   runs the CRT pass on the output grid and adds the HD palettes (`battle_frames_palette`) to
+   clan16, so F2 does not crush HD art into 4×4 blocks of 16 colours.
+
+## 4b. HD battle sprites
+
+`CombatantStats.battle_frames` (SpriteFrames) replaces the pixel strip when set. All cells share
+one origin, the point between the feet: `battle_frames_origin = (96, 190)`. `BattleActorView`
+maps game events to animations: rest = `idle` (or `defend` while Guarding), offensive skill →
+`attack`, hit → `hurt` (with flash + shake), KO → `death` (holds the last frame). Sheets, frame
+timings and how they were produced: `assets/sprites/knight/`, `tools/build_knight_frames.gd`,
+`tools/sprite_pipeline/README.md`.
 
 To use the transition elsewhere (cutscenes, doors): call `BattleTransition._run(scene_path, mode, flash_color)`
 or copy its tween; the shader has no scene-specific code.
@@ -144,11 +163,12 @@ or copy its tween; the shader has no scene-specific code.
 ## 5. Verification
 
 ```
-godot --headless --path . res://tests/test_runner.tscn          # 38 checks, exit code 0/1
+godot --headless --path . res://tests/test_runner.tscn          # 101 checks, exit code 0/1
 xvfb-run godot --path . --rendering-driver opengl3 res://tests/capture.tscn -- /tmp/shots
 ```
 
-`test_runner` covers the skill pipeline, cooldowns, status modifiers, advantage geometry, both
+`test_runner` (101 checks) covers HD frames (every animation, shared origin), the HD battle view
+(stretch mode, 1:1 scale, idle/defend/attack/death), Guard lasting until the next turn, the skill pipeline, cooldowns, status modifiers, advantage geometry, both
 openings, persistence across battle, a full automated battle (loop test), and three overworld
 scenarios (cone → suspicious → alert → chase; back strike = PLAYER; chased from behind = ENEMY).
 Flipping the sign of `BEHIND_DOT` makes it fail, so the test is checking the rule.
