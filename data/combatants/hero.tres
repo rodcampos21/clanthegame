@@ -6,7 +6,6 @@
 [ext_resource type="Resource" path="res://data/skills/power_slash.tres" id="3"]
 [ext_resource type="Resource" path="res://data/skills/fire.tres" id="4"]
 [ext_resource type="Resource" path="res://data/skills/guard.tres" id="5"]
-[ext_resource type="Resource" path="res://data/skills/heal.tres" id="6"]
 [ext_resource type="Texture2D" path="res://assets/sprites/hero_side.png" id="tex"]
 [ext_resource type="SpriteFrames" path="res://assets/sprites/knight/knight_frames.tres" id="hd"]
 [ext_resource type="Texture2D" path="res://assets/sprites/knight/palette.png" id="hdpal"]
@@ -21,7 +20,7 @@ atk = 9
 mag = 8
 def = 5
 spd = 12
-skills = Array[ExtResource("sd")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])
+skills = Array[ExtResource("sd")]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])
 battle_texture = ExtResource("tex")
 battle_hframes = 2
 battle_frames = ExtResource("hd")

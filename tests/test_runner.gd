@@ -25,7 +25,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	for t in ["skill_pipeline", "cooldowns", "status_modifiers", "advantage_rules",
 			"opening_player_advantage", "opening_enemy_ambush", "persistence", "guard_lasts",
-			"hd_knight_frames", "hd_battle_view", "battle_background",
+			"hd_knight_frames", "hd_battle_view", "battle_background", "knight_kit",
 			"battle_loop_victory", "overworld_perception", "overworld_back_strike",
 			"overworld_ambush_contact"]:
 		_current = t
@@ -167,6 +167,12 @@ func test_guard_lasts() -> void:
 
 ## Background art on the 320x180 grid, and every color of it is in the palette merged into
 ## the CRT filter (otherwise F2 remaps the scenery to the overworld colors).
+func test_knight_kit() -> void:
+	var hero: CombatantStats = load("res://data/combatants/hero.tres")
+	var ids: Array = hero.skills.map(func(sk: SkillData) -> StringName: return sk.id)
+	check(ids == [&"attack", &"power_slash", &"fire", &"guard"], "knight kit is attack/power slash/fire/guard (%s)" % [ids])
+	check(not hero.skills.any(func(sk: SkillData) -> bool: return sk.kind == SkillData.Kind.HEAL), "knight has no heal skill")
+
 func test_battle_background() -> void:
 	var scene: Node = load("res://scenes/battle/battle.tscn").instantiate()
 	var bg: Image = (scene.get_node("Background") as Sprite2D).texture.get_image()

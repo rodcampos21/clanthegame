@@ -158,7 +158,7 @@ All three shaders are in `shaders/` and work on the **virtual 320×180 grid**, s
 |---|---|
 | waiting | `idle` (`defend` while Guarding) |
 | skill with `approach = true` (Attack, Power Slash) | `advance` run to `MELEE_GAP` px in front of the target → `SkillData.user_anim` → stays there while damage resolves → runs back (`advance`, mirrored) |
-| skill without approach (Fire, Heal) | `user_anim` in place (`skill`) |
+| skill without approach (Fire; Heal for future healers) | `user_anim` in place (`skill`) |
 | hit | `hurt` + flash + shake |
 | KO | `death` (holds the last frame) |
 | victory | `victory` (holds the cheer) |
@@ -173,11 +173,11 @@ or copy its tween; the shader has no scene-specific code.
 ## 5. Verification
 
 ```
-godot --headless --path . res://tests/test_runner.tscn          # 129 checks, exit code 0/1
+godot --headless --path . res://tests/test_runner.tscn          # 131 checks, exit code 0/1
 xvfb-run godot --path . --rendering-driver opengl3 res://tests/capture.tscn -- /tmp/shots
 ```
 
-`test_runner` (129 checks) covers the battle background (320x180, colors in the CRT palette), HD frames (every animation, shared origin), the HD battle view
+`test_runner` (131 checks) covers the battle background (320x180, colors in the CRT palette), HD frames (every animation, shared origin), the HD battle view
 (stretch mode, 1:1 scale, idle/defend/attack/death), Guard lasting until the next turn, the skill pipeline, cooldowns, status modifiers, advantage geometry, both
 openings, persistence across battle, a full automated battle (loop test), and three overworld
 scenarios (cone → suspicious → alert → chase; back strike = PLAYER; chased from behind = ENEMY).
