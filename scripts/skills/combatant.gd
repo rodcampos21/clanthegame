@@ -12,6 +12,7 @@ signal died(combatant: Combatant)
 
 enum Team { PARTY, ENEMY }
 
+var _in_turn := false          # between start_of_turn() and end_of_turn()
 var stats: CombatantStats
 var side: Team = Team.PARTY
 var display_name: String = ""
@@ -104,7 +105,9 @@ func add_status(data: StatusEffectData, turns: int = -1) -> void:
 		if s.data.id == data.id:      # refresh instead of stacking
 			s.turns = maxi(s.turns, t)
 			return
-	statuses.append({ "data": data, "turns": t })
+	# A status put on yourself during your own turn (Guard) must not tick down at the end of
+	# that same turn, or "until your next turn" would expire before anyone else acts.
+	statuses.append({ "data": data, "turns": t, "fresh": _in_turn })
 	status_added.emit(self, data)
 
 func remove_status(id: StringName) -> void:
@@ -116,6 +119,7 @@ func remove_status(id: StringName) -> void:
 
 func start_of_turn() -> Array[Dictionary]:
 	## Damage-over-time ticks. Returns presentation events.
+	_in_turn = true
 	var events: Array[Dictionary] = []
 	for s in statuses.duplicate():
 		var d: StatusEffectData = s.data
@@ -126,7 +130,11 @@ func start_of_turn() -> Array[Dictionary]:
 
 func end_of_turn() -> void:
 	## Count down statuses and cooldowns owned by this combatant.
+	_in_turn = false
 	for i in range(statuses.size() - 1, -1, -1):
+		if statuses[i].get("fresh", false):
+			statuses[i].fresh = false
+			continue
 		statuses[i].turns -= 1
 		if statuses[i].turns <= 0:
 			var d: StatusEffectData = statuses[i].data

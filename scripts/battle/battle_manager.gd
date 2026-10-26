@@ -50,12 +50,37 @@ var _ended := false
 @onready var command_list: VBoxContainer = $UI/Commands/VBox/List
 @onready var command_info: Label = $UI/Commands/VBox/Info
 
+## The battle renders in canvas_items stretch: layout and pixel art stay on the 320x180 grid
+## (same 4x look), but the HD battle sprites (battle_frames) are drawn at full output
+## resolution. The overworld keeps the original pixel-perfect viewport stretch.
+const BATTLE_STRETCH := Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
+var _prev_stretch := Window.CONTENT_SCALE_MODE_VIEWPORT
+
+func _enter_tree() -> void:
+	_prev_stretch = get_window().content_scale_mode
+	get_window().content_scale_mode = BATTLE_STRETCH
+
+func _exit_tree() -> void:
+	get_window().content_scale_mode = _prev_stretch
+	BattleTransition.set_display_grid(Vector2(320, 180))
+
+## CRT filter on the output grid with the HD palettes (see BattleTransition.set_display_grid).
+func _setup_display() -> void:
+	var pals: Array[Texture2D] = []
+	for c: Combatant in party + enemies:
+		if c.stats.battle_frames_palette and not pals.has(c.stats.battle_frames_palette):
+			pals.append(c.stats.battle_frames_palette)
+	if pals.is_empty():
+		return   # only pixel-strip combatants: keep the 320x180 CRT look
+	BattleTransition.set_display_grid(Vector2(get_window().size), pals)
+
 func _ready() -> void:
 	if rng_seed != 0:
 		rng.seed = rng_seed
 	else:
 		rng.randomize()
 	_build_from_encounter(GameState.pending_encounter)
+	_setup_display()
 	command_panel.visible = false
 	_battle_loop()
 

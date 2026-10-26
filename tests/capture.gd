@@ -56,6 +56,25 @@ func _ready() -> void:
 	battle.command_chosen.emit({ "skill": load("res://data/skills/fire.tres") })
 	await _frames(5)
 	await shot("08_target_select")
+	# HD knight: attack swing (wind-up / impact), then Guard pose on his next turn
+	battle.command_chosen.emit({ "back": true })
+	await _frames(2)
+	battle.command_chosen.emit({ "skill": load("res://data/skills/attack.tres") })
+	await _frames(2)
+	var target: Combatant = battle.enemies.filter(func(e: Combatant) -> bool: return e.is_alive())[0]
+	battle.command_chosen.emit({ "target": target })
+	await _seconds(0.12)
+	await shot("10_attack_windup")
+	await _seconds(0.14)
+	await shot("11_attack_swing")
+	var waited := 0.0
+	while not battle.command_panel.visible and waited < 12.0:
+		await _seconds(0.1)
+		waited += 0.1
+	if battle.command_panel.visible:
+		battle.command_chosen.emit({ "skill": load("res://data/skills/guard.tres") })
+		await _seconds(0.8)
+		await shot("12_guard")
 	BattleTransition.set_crt(true)
 	await _frames(3)
 	await shot("09_crt_on")
@@ -64,7 +83,10 @@ func _ready() -> void:
 func shot(name: String) -> void:
 	await RenderingServer.frame_post_draw
 	var img := get_viewport().get_texture().get_image()
-	img.resize(img.get_width() * 3, img.get_height() * 3, Image.INTERPOLATE_NEAREST)
+	# overworld renders on the 320x180 grid (viewport stretch); the battle renders at the
+	# 1280x720 output (canvas_items stretch, HD sprites). Save both at 1280x720.
+	if img.get_width() < 1280:
+		img.resize(img.get_width() * (1280 / img.get_width()), img.get_height() * (1280 / img.get_width()), Image.INTERPOLATE_NEAREST)
 	img.save_png("%s/%s.png" % [out_dir, name])
 	print("shot ", name, " ", get_tree().current_scene.name)
 
