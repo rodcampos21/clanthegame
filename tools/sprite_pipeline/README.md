@@ -37,3 +37,18 @@ How `assets/sprites/knight/*.png` were made. Sources live in `art/knight/`.
 
 Rules that keep animations from "jumping": same origin (96, 190) in every sheet, one scale per
 strip (head size for poses with no standing frame), locked palette for every animation.
+
+## Backgrounds — `bg_to_grid.py`
+
+AI "pixel art" backgrounds come as big images with fake ~8 px pixels. `bg_to_grid.py` turns
+one into real pixel art on the game grid: reduce to a short palette (median cut, no dither),
+then each grid cell becomes the most-voted color of its center.
+
+```bash
+python3 tools/sprite_pipeline/bg_to_grid.py art/backgrounds/battle_field_dusk.jpg \
+    assets/sprites/battle_bg.png --w 320 --h 180 --colors 40 \
+    --palette-out assets/sprites/battle_bg_palette.png
+```
+
+The palette goes to `BattleManager.background_palette` (battle.tscn) so the CRT filter (F2)
+keeps the scenery colors.

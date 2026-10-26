@@ -173,11 +173,11 @@ or copy its tween; the shader has no scene-specific code.
 ## 5. Verification
 
 ```
-godot --headless --path . res://tests/test_runner.tscn          # 126 checks, exit code 0/1
+godot --headless --path . res://tests/test_runner.tscn          # 129 checks, exit code 0/1
 xvfb-run godot --path . --rendering-driver opengl3 res://tests/capture.tscn -- /tmp/shots
 ```
 
-`test_runner` (126 checks) covers HD frames (every animation, shared origin), the HD battle view
+`test_runner` (129 checks) covers the battle background (320x180, colors in the CRT palette), HD frames (every animation, shared origin), the HD battle view
 (stretch mode, 1:1 scale, idle/defend/attack/death), Guard lasting until the next turn, the skill pipeline, cooldowns, status modifiers, advantage geometry, both
 openings, persistence across battle, a full automated battle (loop test), and three overworld
 scenarios (cone → suspicious → alert → chase; back strike = PLAYER; chased from behind = ENEMY).

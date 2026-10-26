@@ -25,7 +25,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	for t in ["skill_pipeline", "cooldowns", "status_modifiers", "advantage_rules",
 			"opening_player_advantage", "opening_enemy_ambush", "persistence", "guard_lasts",
-			"hd_knight_frames", "hd_battle_view",
+			"hd_knight_frames", "hd_battle_view", "battle_background",
 			"battle_loop_victory", "overworld_perception", "overworld_back_strike",
 			"overworld_ambush_contact"]:
 		_current = t
@@ -164,6 +164,27 @@ func test_guard_lasts() -> void:
 	check(after == before - 1, "statuses from others still tick every turn (%d -> %d)" % [before, after])
 
 # ---------------------------------------------------------------- HD battle sprites
+
+## Background art on the 320x180 grid, and every color of it is in the palette merged into
+## the CRT filter (otherwise F2 remaps the scenery to the overworld colors).
+func test_battle_background() -> void:
+	var scene: Node = load("res://scenes/battle/battle.tscn").instantiate()
+	var bg: Image = (scene.get_node("Background") as Sprite2D).texture.get_image()
+	var pal_tex: Texture2D = scene.background_palette
+	check(bg.get_size() == Vector2i(320, 180), "background is 320x180 (%s)" % bg.get_size())
+	check(pal_tex != null, "battle has a background palette")
+	if pal_tex:
+		var pal := {}
+		var pimg := pal_tex.get_image()
+		for x: int in pimg.get_width():
+			pal[pimg.get_pixel(x, 0).to_html(false)] = true
+		var missing := 0
+		for y: int in bg.get_height():
+			for x: int in bg.get_width():
+				if not pal.has(bg.get_pixel(x, y).to_html(false)):
+					missing += 1
+		check(missing == 0, "all background colors in its palette (%d px missing)" % missing)
+	scene.free()
 
 func test_hd_knight_frames() -> void:
 	var f: SpriteFrames = HERO.battle_frames

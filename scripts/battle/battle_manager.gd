@@ -25,6 +25,8 @@ const RUN_CHANCE := 0.6
 ## Go back to the overworld through BattleTransition when the battle ends.
 @export var return_on_finish := true
 @export var rng_seed := 0
+## Colors of the Background art, merged into the CRT palette so the filter keeps them.
+@export var background_palette: Texture2D
 
 var rng := RandomNumberGenerator.new()
 var queue := TurnQueue.new()
@@ -64,15 +66,21 @@ func _exit_tree() -> void:
 	get_window().content_scale_mode = _prev_stretch
 	BattleTransition.set_display_grid(Vector2(320, 180))
 
-## CRT filter on the output grid with the HD palettes (see BattleTransition.set_display_grid).
+## CRT filter: background colors always kept; with HD sprites, output grid + their palettes
+## (see BattleTransition.set_display_grid).
 func _setup_display() -> void:
 	var pals: Array[Texture2D] = []
+	if background_palette:
+		pals.append(background_palette)
+	var hd := false
 	for c: Combatant in party + enemies:
 		if c.stats.battle_frames_palette and not pals.has(c.stats.battle_frames_palette):
 			pals.append(c.stats.battle_frames_palette)
+			hd = true
 	if pals.is_empty():
-		return   # only pixel-strip combatants: keep the 320x180 CRT look
-	BattleTransition.set_display_grid(Vector2(get_window().size), pals)
+		return
+	# only pixel-strip combatants: keep the 320x180 CRT grid
+	BattleTransition.set_display_grid(Vector2(get_window().size) if hd else Vector2(320, 180), pals)
 
 func _ready() -> void:
 	if rng_seed != 0:
