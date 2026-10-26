@@ -52,3 +52,11 @@ python3 tools/sprite_pipeline/bg_to_grid.py art/backgrounds/battle_field_dusk.jp
 
 The palette goes to `BattleManager.background_palette` (battle.tscn) so the CRT filter (F2)
 keeps the scenery colors.
+
+## HUD — `make_hud.py`
+
+`python3 tools/sprite_pipeline/make_hud.py art/hud/hud_sheet.jpg assets/ui/hud` samples every
+piece of the AI HUD sheet on its native grid (~8 px AI pixels), removes the white background,
+snaps all pieces to one 32-color palette and rebuilds the bar fills inside each frame's channel.
+It prints the channel of every frame: copy `channel_x` / `channel_w` into `data/ui/bar_*.tres`.
+The piece boxes (`BOXES`) belong to this sheet; a new sheet needs new boxes.

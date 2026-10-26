@@ -25,3 +25,5 @@ extends Resource
 @export var persists_outside_battle: bool = false
 ## Tint used by the battle view and the overworld HUD.
 @export var color: Color = Color.WHITE
+## Small HUD icon shown before the status name in battle (optional).
+@export var icon: Texture2D

@@ -1,4 +1,5 @@
-## Visual for one Combatant in battle: sprite, HP bar, status tags, hit feedback.
+## Visual for one Combatant in battle: sprite, HP bar (enemies; the party's HP is on the
+## HeroPanel), status icons + tags, hit feedback.
 ## Pure presentation: reads the Combatant, never changes it.
 ##
 ## Two sprite kinds:
@@ -11,10 +12,9 @@ class_name BattleActorView
 extends Node2D
 
 const FLASH_SHADER := preload("res://shaders/hit_flash.gdshader")
-const INK := Color("1a1423")
-const RED := Color("c8434b")
+const BAR_STYLE := preload("res://data/ui/bar_short.tres")
+const ICON_SCALE := 0.5          # grid px per icon art px (same density as the bars)
 const GOLD := Color("f5d26b")
-const GREEN := Color("9fd16b")
 const WHITE := Color("f4f0e6")
 
 var combatant: Combatant
@@ -30,6 +30,9 @@ var _flash_mat: ShaderMaterial
 var _anim_t := 0.0
 var _home := Vector2.ZERO
 var _status_label: Label
+var _status_row: HBoxContainer      # status icons + tag label, centered under the feet
+var _icons: HBoxContainer
+var hp_bar: PixelBar                # null for party members
 
 func setup(c: Combatant, face_left: bool) -> void:
 	combatant = c
@@ -39,13 +42,32 @@ func setup(c: Combatant, face_left: bool) -> void:
 		_setup_hd(c, face_left)
 	else:
 		_setup_strip(c, face_left)
+	var row_y := 6.0
+	if c.side != Combatant.Team.PARTY:
+		hp_bar = PixelBar.new()
+		hp_bar.style = BAR_STYLE
+		hp_bar.position = Vector2(-16, 2)
+		hp_bar.set_value(c.hp, c.stats.max_hp, false)
+		add_child(hp_bar)
+		row_y = 12.0
+	_status_row = HBoxContainer.new()
+	_status_row.alignment = BoxContainer.ALIGNMENT_CENTER
+	_status_row.add_theme_constant_override("separation", 1)
+	_status_row.position = Vector2(-40, row_y)
+	_status_row.size = Vector2(80, 10)
+	_status_row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(_status_row)
+	_icons = HBoxContainer.new()
+	_icons.add_theme_constant_override("separation", 1)
+	_status_row.add_child(_icons)
 	_status_label = Label.new()
-	_status_label.position = Vector2(-20, 6)
-	_status_label.size = Vector2(40, 8)
-	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	add_child(_status_label)
+	_status_label.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	_status_row.add_child(_status_label)
 	_home = position
-	c.hp_changed.connect(func(_c, _o, _n) -> void: queue_redraw())
+	c.hp_changed.connect(func(_c, _o, n: int) -> void:
+		if hp_bar:
+			hp_bar.set_value(n, combatant.stats.max_hp)
+		queue_redraw())
 	c.status_added.connect(func(_c, _s) -> void: refresh())
 	c.status_removed.connect(func(_c, _s) -> void: refresh())
 	refresh()
@@ -114,9 +136,19 @@ func play_once(anim: StringName) -> void:
 func refresh() -> void:
 	var tags := []
 	var col := WHITE
+	for child in _icons.get_children():
+		child.free()
 	for s in combatant.statuses:
 		tags.append(s.data.display_name.to_upper())
 		col = s.data.color
+		if s.data.icon:
+			var icon_rect := TextureRect.new()
+			icon_rect.texture = s.data.icon
+			icon_rect.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+			icon_rect.custom_minimum_size = s.data.icon.get_size() * ICON_SCALE
+			icon_rect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			_icons.add_child(icon_rect)
 	_status_label.text = " ".join(tags)
 	_status_label.add_theme_color_override("font_color", col)
 	_play_rest()
@@ -125,11 +157,6 @@ func refresh() -> void:
 func _draw() -> void:
 	if combatant == null or not combatant.is_alive():
 		return
-	# HP bar: 24px, whole pixels, palette colours only.
-	var w := 24
-	var fill := int(round(float(combatant.hp) / combatant.stats.max_hp * w))
-	draw_rect(Rect2(-w / 2 - 1, 2, w + 2, 4), INK)
-	draw_rect(Rect2(-w / 2, 3, fill, 2), GREEN if combatant.side == Combatant.Team.PARTY else RED)
 	if selected:
 		# bouncing target arrow
 		var y := -int(sprite_height()) - 8 - int(_anim_t * 6.0) % 2
@@ -210,8 +237,13 @@ func die() -> void:
 		_sprite.visible = i % 2 == 1
 		await get_tree().create_timer(0.06).timeout
 	_sprite.visible = false
-	_status_label.visible = false
+	_hide_hud()
 	queue_redraw()
+
+func _hide_hud() -> void:
+	_status_row.visible = false
+	if hp_bar:
+		hp_bar.visible = false
 
 func top() -> Vector2:
 	return position + Vector2(0, -sprite_height() - 4)
@@ -223,6 +255,7 @@ func celebrate() -> void:
 		await _hd.animation_finished
 
 func debug_state() -> String:
+	var bar := (" " + hp_bar.debug_state()) if hp_bar else ""
 	if _hd:
-		return "%s HD anim=%s frame=%d busy=%s scale=%s" % [combatant.display_name, _hd.animation, _hd.frame, _busy, _hd.scale]
-	return "%s strip frame=%d" % [combatant.display_name, _sprite.frame]
+		return "%s HD anim=%s frame=%d busy=%s scale=%s%s" % [combatant.display_name, _hd.animation, _hd.frame, _busy, _hd.scale, bar]
+	return "%s strip frame=%d%s" % [combatant.display_name, _sprite.frame, bar]

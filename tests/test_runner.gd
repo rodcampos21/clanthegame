@@ -25,7 +25,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 	for t in ["skill_pipeline", "cooldowns", "status_modifiers", "advantage_rules",
 			"opening_player_advantage", "opening_enemy_ambush", "persistence", "guard_lasts",
-			"hd_knight_frames", "hd_battle_view", "battle_background", "knight_kit",
+			"hd_knight_frames", "hd_battle_view", "battle_background", "knight_kit", "hud_bar_art", "hud_bars",
 			"battle_loop_victory", "overworld_perception", "overworld_back_strike",
 			"overworld_ambush_contact"]:
 		_current = t
@@ -167,6 +167,87 @@ func test_guard_lasts() -> void:
 
 ## Background art on the 320x180 grid, and every color of it is in the palette merged into
 ## the CRT filter (otherwise F2 remaps the scenery to the overworld colors).
+## Bar art from make_hud.py: frame/fill/trail line up, fill only inside the channel, and every
+## HUD color is in the palette merged into the CRT filter.
+func test_hud_bar_art() -> void:
+	var pal := {}
+	var pimg: Image = load("res://assets/ui/hud/hud_palette.png").get_image()
+	for x: int in pimg.get_width():
+		pal[pimg.get_pixel(x, 0).to_html(false)] = true
+	for path: String in ["res://data/ui/bar_hp.tres", "res://data/ui/bar_mp.tres", "res://data/ui/bar_short.tres"]:
+		var st: HudBarStyle = load(path)
+		var frame := st.frame.get_image()
+		var off_palette := 0
+		for tex: Texture2D in [st.frame, st.fill, st.trail]:
+			if tex == null:
+				continue
+			check(tex.get_size() == st.frame.get_size(), "%s: layers share the frame size" % path.get_file())
+			var img := tex.get_image()
+			var outside := 0
+			for y: int in img.get_height():
+				for x: int in img.get_width():
+					var c := img.get_pixel(x, y)
+					if c.a < 0.5:
+						continue
+					if not pal.has(c.to_html(false)):
+						off_palette += 1
+					if tex != st.frame and (x < st.channel_x or x >= st.channel_x + st.channel_w):
+						outside += 1
+			check(outside == 0, "%s: fill/trail pixels only inside the channel (%d outside)" % [path.get_file(), outside])
+		check(off_palette == 0, "%s: all colors in hud_palette (%d px off)" % [path.get_file(), off_palette])
+		# fill column at the channel middle must exist (fill rebuilt inside the channel)
+		var mid := st.fill.get_image().get_pixel(st.channel_x + st.channel_w / 2, frame.get_height() / 2)
+		check(mid.a > 0.5, "%s: fill covers the channel middle" % path.get_file())
+
+## PixelBar rules: whole art pixels, never empty while alive, damage trail in game time,
+## enemies get a bar, the hero panel bars follow HP/MP.
+func test_hud_bars() -> void:
+	var bar := PixelBar.new()
+	bar.style = load("res://data/ui/bar_short.tres")
+	add_child(bar)
+	var w := bar.style.channel_w
+	bar.set_value(60, 60, false)
+	check(bar.pixels(bar.ratio) == w, "full HP fills the channel (%d/%d)" % [bar.pixels(bar.ratio), w])
+	bar.set_value(1, 999, false)
+	check(bar.pixels(bar.ratio) == 1, "1 HP of 999 still shows 1 pixel")
+	bar.set_value(0, 60, false)
+	check(bar.pixels(bar.ratio) == 0, "0 HP is empty")
+	bar.set_value(60, 60, false)
+	bar.set_value(30, 60)
+	check(bar.pixels(bar.ratio) == roundi(w * 0.5) and is_equal_approx(bar.trail_ratio, 1.0),
+		"hit: fill drops at once, trail holds (%s)" % bar.debug_state())
+	await get_tree().create_timer(PixelBar.TRAIL_DELAY * 0.5).timeout
+	check(is_equal_approx(bar.trail_ratio, 1.0), "trail still holding during the delay")
+	await get_tree().create_timer(PixelBar.TRAIL_DELAY + PixelBar.TRAIL_TIME).timeout
+	check(is_equal_approx(bar.trail_ratio, 0.5), "trail catches up after delay + slide (%.2f)" % bar.trail_ratio)
+	bar.set_value(60, 60)
+	check(is_equal_approx(bar.trail_ratio, 1.0) and is_equal_approx(bar.ratio, 1.0), "gain snaps both")
+	bar.queue_free()
+	# in battle
+	var enemies: Array[CombatantStats] = [SLIME]
+	GameState.begin_encounter(&"hud", enemies, A.NEUTRAL, Vector2.ZERO, Vector2.RIGHT)
+	var b: BattleManager = BATTLE.instantiate()
+	b.return_on_finish = false
+	b.rng_seed = 5
+	add_child(b)
+	await get_tree().process_frame
+	var hero: Combatant = b.party[0]
+	var foe: Combatant = b.enemies[0]
+	check(b.views[hero].hp_bar == null, "party view has no floating bar (HP is on the panel)")
+	var fb: PixelBar = b.views[foe].hp_bar
+	check(fb != null and fb.visible, "enemy has a pixel HP bar")
+	if fb:
+		foe.apply_hp_delta(-foe.stats.max_hp / 2)
+		check(fb.ratio < 0.6 and fb.trail_ratio > 0.99, "enemy bar drops, trail shows the loss (%s)" % fb.debug_state())
+	hero.apply_hp_delta(-10)
+	b._refresh_ui()
+	check(is_equal_approx(b.hero_hp_bar.ratio, float(hero.hp) / hero.stats.max_hp), "hero panel HP bar follows HP")
+	check(b.hero_hp.text == "%d/%d" % [hero.hp, hero.stats.max_hp], "hero panel HP text")
+	hero.add_status(GUARD.applies_status)
+	check(b.views[hero]._icons.get_child_count() == 1, "Guard shows its shield icon")
+	b.queue_free()
+	await get_tree().process_frame
+
 func test_knight_kit() -> void:
 	var hero: CombatantStats = load("res://data/combatants/hero.tres")
 	var ids: Array = hero.skills.map(func(sk: SkillData) -> StringName: return sk.id)

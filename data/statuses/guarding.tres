@@ -1,6 +1,7 @@
 [gd_resource type="Resource" script_class="StatusEffectData" format=3]
 
 [ext_resource type="Script" path="res://scripts/skills/status_effect_data.gd" id="1"]
+[ext_resource type="Texture2D" path="res://assets/ui/hud/icon_shield.png" id="2"]
 
 [resource]
 script = ExtResource("1")
@@ -10,3 +11,4 @@ description = "Defense doubled until the next turn."
 duration_turns = 1
 def_mult = 2.0
 color = Color(0.29, 0.56, 0.82, 1)
+icon = ExtResource("2")

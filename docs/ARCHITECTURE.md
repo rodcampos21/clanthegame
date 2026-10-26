@@ -52,7 +52,7 @@ root (Window)
     ├── PartySlots/Hero, EnemySlots/E0..E2 (Marker2D)
     ├── Actors (BattleActorView per Combatant, built at runtime)
     ├── FX (damage numbers)
-    └── UI (CanvasLayer): Banner, TurnOrder, Log, HeroPanel, Commands (buttons built from skill data)
+    └── UI (CanvasLayer): Banner, TurnOrder, Log, HeroPanel (HP/MP PixelBars), Commands (buttons built from skill data)
 ```
 
 Physics layers: 1 `world`, 2 `player`, 3 `enemies`. Player and enemies do not block each other; contact is detected by areas so a collision never "pushes" a battle away.
@@ -170,14 +170,32 @@ timings and how they were produced: `assets/sprites/knight/`, `tools/build_knigh
 To use the transition elsewhere (cutscenes, doors): call `BattleTransition._run(scene_path, mode, flash_color)`
 or copy its tween; the shader has no scene-specific code.
 
+## 4c. Battle HUD (pixel bars)
+
+The bars and status icons come from one AI sheet (`art/hud/hud_sheet.jpg`) turned into real pixel
+art by `tools/sprite_pipeline/make_hud.py` → `assets/ui/hud/` + `hud_palette.png` (merged into the
+CRT palette through `BattleManager.hud_palette`).
+
+| Piece | Where |
+|---|---|
+| `HudBarStyle` (`data/ui/bar_hp/bar_mp/bar_short.tres`) | frame + fill + trail textures, channel columns |
+| `PixelBar` (`scripts/ui/pixel_bar.gd`) | draws frame → trail → fill, `art_scale` 0.5 grid px per art px (2 screen px at 720p) |
+| HeroPanel | HP and MP bars + numbers for `party[0]` |
+| `BattleActorView.hp_bar` | short bar under each enemy (party members use the panel) |
+| `StatusEffectData.icon` | shield (Guard), star (Stunned) before the status name |
+
+Rules: fill width is whole art pixels and never 0 while the value is above 0; on a loss the fill
+drops at once and the orange trail holds `TRAIL_DELAY` 0.35 s, then slides in `TRAIL_TIME` 0.4 s
+(tweens run in game time, so hitstop freezes them); a gain snaps both.
+
 ## 5. Verification
 
 ```
-godot --headless --path . res://tests/test_runner.tscn          # 131 checks, exit code 0/1
+godot --headless --path . res://tests/test_runner.tscn          # 166 checks, exit code 0/1
 xvfb-run godot --path . --rendering-driver opengl3 res://tests/capture.tscn -- /tmp/shots
 ```
 
-`test_runner` (131 checks) covers the battle background (320x180, colors in the CRT palette), HD frames (every animation, shared origin), the HD battle view
+`test_runner` (166 checks) covers the HUD bars (art aligned to the channel, palette, whole-pixel fill, damage trail timing), the battle background (320x180, colors in the CRT palette), HD frames (every animation, shared origin), the HD battle view
 (stretch mode, 1:1 scale, idle/defend/attack/death), Guard lasting until the next turn, the skill pipeline, cooldowns, status modifiers, advantage geometry, both
 openings, persistence across battle, a full automated battle (loop test), and three overworld
 scenarios (cone → suspicious → alert → chase; back strike = PLAYER; chased from behind = ENEMY).

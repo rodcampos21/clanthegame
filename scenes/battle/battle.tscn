@@ -1,12 +1,17 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://scripts/battle/battle_manager.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/battle_bg.png" id="2"]
 [ext_resource type="Texture2D" path="res://assets/sprites/battle_bg_palette.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/ui/hud/hud_palette.png" id="4"]
+[ext_resource type="Script" path="res://scripts/ui/pixel_bar.gd" id="5"]
+[ext_resource type="Resource" path="res://data/ui/bar_hp.tres" id="6"]
+[ext_resource type="Resource" path="res://data/ui/bar_mp.tres" id="7"]
 
 [node name="Battle" type="Node2D"]
 script = ExtResource("1")
 background_palette = ExtResource("3")
+hud_palette = ExtResource("4")
 
 [node name="Background" type="Sprite2D" parent="."]
 texture = ExtResource("2")
@@ -15,7 +20,7 @@ centered = false
 [node name="PartySlots" type="Node2D" parent="."]
 
 [node name="Hero" type="Marker2D" parent="PartySlots"]
-position = Vector2(64, 128)
+position = Vector2(64, 118)
 
 [node name="EnemySlots" type="Node2D" parent="."]
 
@@ -66,10 +71,14 @@ theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
 
 [node name="HeroPanel" type="PanelContainer" parent="UI"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
 offset_left = 4.0
-offset_top = 146.0
-offset_right = 70.0
-offset_bottom = 176.0
+offset_top = -4.0
+offset_right = 4.0
+offset_bottom = -4.0
+grow_vertical = 0
 
 [node name="VBox" type="VBoxContainer" parent="UI/HeroPanel"]
 layout_mode = 2
@@ -79,13 +88,34 @@ layout_mode = 2
 theme_override_colors/font_color = Color(0.961, 0.824, 0.42, 1)
 text = "HERO"
 
-[node name="HP" type="Label" parent="UI/HeroPanel/VBox"]
+[node name="HPRow" type="HBoxContainer" parent="UI/HeroPanel/VBox"]
 layout_mode = 2
-text = "HP 60/60"
+theme_override_constants/separation = 2
 
-[node name="MP" type="Label" parent="UI/HeroPanel/VBox"]
+[node name="Bar" type="Control" parent="UI/HeroPanel/VBox/HPRow"]
 layout_mode = 2
-text = "MP 20/20"
+script = ExtResource("5")
+style = ExtResource("6")
+
+[node name="HP" type="Label" parent="UI/HeroPanel/VBox/HPRow"]
+layout_mode = 2
+size_flags_vertical = 4
+text = "60/60"
+
+[node name="MPRow" type="HBoxContainer" parent="UI/HeroPanel/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Bar" type="Control" parent="UI/HeroPanel/VBox/MPRow"]
+layout_mode = 2
+script = ExtResource("5")
+style = ExtResource("7")
+
+[node name="MP" type="Label" parent="UI/HeroPanel/VBox/MPRow"]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.45, 0.78, 0.92, 1)
+text = "20/20"
 
 [node name="Commands" type="PanelContainer" parent="UI"]
 anchors_preset = 3

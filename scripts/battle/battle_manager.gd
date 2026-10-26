@@ -27,6 +27,8 @@ const RUN_CHANCE := 0.6
 @export var rng_seed := 0
 ## Colors of the Background art, merged into the CRT palette so the filter keeps them.
 @export var background_palette: Texture2D
+## Colors of the HUD art (bars, icons), merged the same way.
+@export var hud_palette: Texture2D
 
 var rng := RandomNumberGenerator.new()
 var queue := TurnQueue.new()
@@ -37,6 +39,7 @@ var views: Dictionary = {}          # Combatant -> BattleActorView
 var turn_count := 0
 var result: StringName = &""
 var _ended := false
+var _hud_shown := false             # first HUD refresh snaps the bars (no damage trail)
 
 @onready var party_slots: Node2D = $PartySlots
 @onready var enemy_slots: Node2D = $EnemySlots
@@ -46,8 +49,10 @@ var _ended := false
 @onready var turn_label: Label = $UI/TurnOrder
 @onready var log_label: Label = $UI/Log
 @onready var hero_name: Label = $UI/HeroPanel/VBox/Name
-@onready var hero_hp: Label = $UI/HeroPanel/VBox/HP
-@onready var hero_mp: Label = $UI/HeroPanel/VBox/MP
+@onready var hero_hp: Label = $UI/HeroPanel/VBox/HPRow/HP
+@onready var hero_mp: Label = $UI/HeroPanel/VBox/MPRow/MP
+@onready var hero_hp_bar: PixelBar = $UI/HeroPanel/VBox/HPRow/Bar
+@onready var hero_mp_bar: PixelBar = $UI/HeroPanel/VBox/MPRow/Bar
 @onready var command_panel: PanelContainer = $UI/Commands
 @onready var command_list: VBoxContainer = $UI/Commands/VBox/List
 @onready var command_info: Label = $UI/Commands/VBox/Info
@@ -70,8 +75,9 @@ func _exit_tree() -> void:
 ## (see BattleTransition.set_display_grid).
 func _setup_display() -> void:
 	var pals: Array[Texture2D] = []
-	if background_palette:
-		pals.append(background_palette)
+	for p: Texture2D in [background_palette, hud_palette]:
+		if p:
+			pals.append(p)
 	var hd := false
 	for c: Combatant in party + enemies:
 		if c.stats.battle_frames_palette and not pals.has(c.stats.battle_frames_palette):
@@ -453,8 +459,11 @@ func _log(t: String) -> void:
 func _refresh_ui(current: Combatant = null) -> void:
 	var h := party[0]
 	hero_name.text = h.display_name.to_upper()
-	hero_hp.text = "HP %d/%d" % [h.hp, h.stats.max_hp]
-	hero_mp.text = "MP %d/%d" % [h.mp, h.stats.max_mp]
+	hero_hp.text = "%d/%d" % [h.hp, h.stats.max_hp]
+	hero_mp.text = "%d/%d" % [h.mp, h.stats.max_mp]
+	hero_hp_bar.set_value(h.hp, h.stats.max_hp, _hud_shown)
+	hero_mp_bar.set_value(h.mp, h.stats.max_mp, _hud_shown)
+	_hud_shown = true
 	var names := []
 	for c in queue.preview(5):
 		names.append(c.display_name.to_upper())
